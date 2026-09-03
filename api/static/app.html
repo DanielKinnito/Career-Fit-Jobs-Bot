@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Career Fit Preferences</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --bg-color: var(--tg-theme-bg-color, #0f1115);
+      --secondary-bg: var(--tg-theme-secondary-bg-color, #181a20);
+      --text-color: var(--tg-theme-text-color, #f4f4f6);
+      --hint-color: var(--tg-theme-hint-color, #8e8e93);
+      --accent-color: var(--tg-theme-button-color, #0a84ff);
+      --accent-text: var(--tg-theme-button-text-color, #ffffff);
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --chip-bg: rgba(255, 255, 255, 0.07);
+      --chip-active-bg: #0a84ff;
+      --chip-active-text: #ffffff;
+      --glass-surface: rgba(24, 26, 32, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.12);
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-color: var(--tg-theme-bg-color, #f2f2f7);
+        --secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
+        --text-color: var(--tg-theme-text-color, #1c1c1e);
+        --hint-color: var(--tg-theme-hint-color, #8e8e93);
+        --accent-color: var(--tg-theme-button-color, #007aff);
+        --accent-text: #ffffff;
+        --card-bg: rgba(255, 255, 255, 0.8);
+        --card-border: rgba(0, 0, 0, 0.06);
+        --chip-bg: rgba(0, 0, 0, 0.05);
+        --chip-active-bg: #007aff;
+        --glass-surface: rgba(255, 255, 255, 0.82);
+        --glass-border: rgba(0, 0, 0, 0.08);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      padding-bottom: 96px;
+      overflow-x: hidden;
+      letter-spacing: -0.01em;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--glass-surface);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 16px 20px 12px;
+    }
+
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .counter {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--hint-color);
+    }
+
+    .search-box {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 38px;
+      background: var(--chip-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 0 36px 0 12px;
+      color: var(--text-color);
+      font-family: inherit;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s ease, background-color 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-color);
+      background: var(--secondary-bg);
+    }
+
+    .clear-search {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--hint-color);
+      font-size: 16px;
+      cursor: pointer;
+      display: none;
+    }
+
+    main {
+      padding: 16px 20px;
+    }
+
+    .sector-group {
+      margin-bottom: 24px;
+    }
+
+    .sector-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--hint-color);
+      margin-bottom: 10px;
+    }
+
+    .chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      background: var(--chip-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-color);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .chip:active {
+      transform: scale(0.94);
+    }
+
+    .chip.selected {
+      background: var(--chip-active-bg);
+      border-color: var(--chip-active-bg);
+      color: var(--chip-active-text);
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.28);
+    }
+
+    .chip .indicator {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: transparent;
+      transition: background 0.15s ease;
+    }
+
+    .chip.selected .indicator {
+      background: #ffffff;
+    }
+
+    .floating-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: var(--glass-surface);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid var(--glass-border);
+      padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .btn-clear {
+      background: none;
+      border: none;
+      color: var(--hint-color);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 10px 12px;
+      border-radius: 10px;
+      transition: color 0.15s ease;
+    }
+
+    .btn-clear:hover {
+      color: #ff453a;
+    }
+
+    .btn-save {
+      flex: 1;
+      height: 46px;
+      background: var(--accent-color);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
+    }
+
+    .btn-save:active {
+      transform: scale(0.97);
+    }
+
+    .btn-save:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .empty-search {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--hint-color);
+      font-size: 15px;
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .chip, .btn-save {
+        transition: none !important;
+        transform: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title-row">
+      <h1>Career Fit</h1>
+      <div class="counter" id="counter">0 / 15 selected</div>
+    </div>
+    <div class="search-box">
+      <input type="text" class="search-input" id="search" placeholder="Search categories..." autocomplete="off">
+      <button class="clear-search" id="clear-search">&times;</button>
+    </div>
+  </header>
+
+  <main id="sectors-container">
+    <!-- Rendered dynamically -->
+  </main>
+  <div class="empty-search" id="empty-search">No matching categories found.</div>
+
+  <div class="floating-bar">
+    <button class="btn-clear" id="btn-clear">Clear</button>
+    <button class="btn-save" id="btn-save">Save Preferences</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+    }
+
+    const SECTORS = [
+      {
+        name: "Technology & Engineering",
+        icon: "💻",
+        categories: ["Developer", "Data Science", "Cybersecurity", "IT", "Engineer", "UX/UI Design", "Graphic Design"]
+      },
+      {
+        name: "Finance, Banking & Accounting",
+        icon: "💼",
+        categories: ["Finance", "Bank", "Accounting", "Auditor", "Insurance", "Analyst"]
+      },
+      {
+        name: "Creative, Media & Comms",
+        icon: "🎨",
+        categories: ["Design", "Media", "Communications", "Content Creation", "Public Relations"]
+      },
+      {
+        name: "Sales & Marketing",
+        icon: "📢",
+        categories: ["Marketing", "Sales", "Product Management", "Salesforce"]
+      },
+      {
+        name: "Operations & Leadership",
+        icon: "🏢",
+        categories: ["Director", "Manager", "Coordinator", "Operations", "Project Management", "Logistics", "Supply Chain", "Administrative", "Assistant"]
+      },
+      {
+        name: "Services, NGO & Legal",
+        icon: "🌐",
+        categories: ["NGO", "Human Resources", "Lawyer", "Legal", "Consultant", "Customer Service", "Research", "Teacher", "Hospitality", "Event Planning"]
+      }
+    ];
+
+    const MAX_PREFERENCES = 15;
+    let selectedCategories = new Set();
+    const telegramUserId = tg?.initDataUnsafe?.user?.id;
+
+    function haptic() {
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.impactOccurred('light');
+      }
+    }
+
+    function renderSectors(filterText = '') {
+      const container = document.getElementById('sectors-container');
+      container.innerHTML = '';
+      let totalVisible = 0;
+
+      SECTORS.forEach(sector => {
+        const filtered = sector.categories.filter(c => c.toLowerCase().includes(filterText.toLowerCase()));
+        if (filtered.length === 0) return;
+
+        totalVisible += filtered.length;
+        const group = document.createElement('div');
+        group.className = 'sector-group';
+
+        const header = document.createElement('div');
+        header.className = 'sector-header';
+        header.innerHTML = `<span>${sector.icon}</span><span>${sector.name}</span>`;
+        group.appendChild(header);
+
+        const chipsGrid = document.createElement('div');
+        chipsGrid.className = 'chips-grid';
+
+        filtered.forEach(category => {
+          const chip = document.createElement('div');
+          const isSelected = selectedCategories.has(category);
+          chip.className = `chip ${isSelected ? 'selected' : ''}`;
+          chip.innerHTML = `<span class="indicator"></span><span>${category}</span>`;
+          chip.addEventListener('click', () => toggleCategory(category, chip));
+          chipsGrid.appendChild(chip);
+        });
+
+        group.appendChild(chipsGrid);
+        container.appendChild(group);
+      });
+
+      document.getElementById('empty-search').style.display = totalVisible === 0 ? 'block' : 'none';
+      updateCounter();
+    }
+
+    function toggleCategory(category, chipElement) {
+      haptic();
+      if (selectedCategories.has(category)) {
+        selectedCategories.delete(category);
+        chipElement.classList.remove('selected');
+      } else {
+        if (selectedCategories.size >= MAX_PREFERENCES) {
+          if (tg?.showAlert) {
+            tg.showAlert(`You can select a maximum of ${MAX_PREFERENCES} categories.`);
+          } else {
+            alert(`Maximum ${MAX_PREFERENCES} categories allowed.`);
+          }
+          return;
+        }
+        selectedCategories.add(category);
+        chipElement.classList.add('selected');
+      }
+      updateCounter();
+    }
+
+    function updateCounter() {
+      const count = selectedCategories.size;
+      document.getElementById('counter').innerText = `${count} / ${MAX_PREFERENCES} selected`;
+      const saveBtn = document.getElementById('btn-save');
+      saveBtn.disabled = count === 0;
+    }
+
+    // Load initial preferences
+    async function loadInitialPreferences() {
+      if (telegramUserId) {
+        try {
+          const res = await fetch(`/api/user-preferences?telegram_id=${telegramUserId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.preferences)) {
+              selectedCategories = new Set(data.preferences);
+            }
+          }
+        } catch (e) {
+          console.warn("Could not fetch user preferences:", e);
+        }
+      }
+      renderSectors();
+    }
+
+    // Search filtering
+    const searchInput = document.getElementById('search');
+    const clearSearch = document.getElementById('clear-search');
+
+    searchInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      clearSearch.style.display = val ? 'block' : 'none';
+      renderSectors(val);
+    });
+
+    clearSearch.addEventListener('click', () => {
+      searchInput.value = '';
+      clearSearch.style.display = 'none';
+      renderSectors('');
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      haptic();
+      selectedCategories.clear();
+      renderSectors(searchInput.value.trim());
+    });
+
+    // Save preferences
+    document.getElementById('btn-save').addEventListener('click', async () => {
+      if (selectedCategories.size === 0) return;
+      haptic();
+
+      const preferencesList = Array.from(selectedCategories);
+
+      // If in Telegram Web App, we can sendData back to the bot
+      if (tg?.sendData) {
+        tg.sendData(JSON.stringify({
+          action: "set_preferences",
+          preferences: preferencesList
+        }));
+        tg.close();
+        return;
+      }
+
+      // Or fallback to direct API call
+      if (telegramUserId) {
+        try {
+          const res = await fetch('/api/user-preferences', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              telegram_id: telegramUserId,
+              preferences: preferencesList
+            })
+          });
+          if (res.ok) {
+            alert('Preferences saved successfully!');
+            if (tg?.close) tg.close();
+          }
+        } catch (err) {
+          alert('Failed to save preferences. Please try again.');
+        }
+      }
+    });
+
+    loadInitialPreferences();
+  </script>
+</body>
+</html>

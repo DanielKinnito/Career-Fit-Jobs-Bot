@@ -1,6 +1,42 @@
+# Environment variables
 .env
+*.env
+!.env.example
+
+# Telethon session credentials
+*.session
+*.session-journal
 session.session
 
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+build/
+dist/
+*.egg-info/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local deployment & serverless
+.vercel/
+
+# Logs and runtime artifacts
+*.log
+last_run.txt
+last_scrape.txt
+last_send.txt
+
+# Editor / IDE settings
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Agent skills cache
 .agents/skills/
 .claude/
-

@@ -1,116 +1,233 @@
-# 🤖 Career Fit Job Bot
+# Career Fit Jobs Bot
 
-Your personal job hunting assistant that brings opportunities right to your Telegram! Currently focused on job opportunities in Ethiopia 🇪🇹
+Career Fit Jobs Bot is an automated job alert service on Telegram. It monitors public employment channels, indexes job posts, matches vacancies against individual user category preferences, and delivers periodic digest alerts.
 
-## ✨ Features
+The system is built on a serverless, zero-maintenance architecture designed to run entirely within free-tier infrastructure limits.
 
-🔍 Smart job scraping from Ethiopian Telegram channels
-🎯 Personalized job matching based on your preferences
-📬 Automated updates 5 times daily
-📱 Easy-to-use Telegram interface
+---
 
-## 🚀 Try it Now!
+## Architecture Overview
 
-1. Start chatting with [@CareerFitJobsBot](https://t.me/CareerFitJobsBot)
-2. Set your job preferences
-3. Receive tailored job updates
+The system is decoupled into two independent execution environments sharing a central Supabase database:
 
-## 🛠️ Development Setup
+```
+                  +-----------------------------------+
+                  |           Telegram User           |
+                  +-----------------+-----------------+
+                                    |
+                         (Commands / Callbacks)
+                                    v
++------------------+      +-------------------+      +-------------------+
+|  Monitored TG    |      |  Telegram Webhook |      |     Supabase      |
+|     Channels     |      |  (Vercel Function)|<---->|    PostgreSQL     |
++--------+---------+      +-------------------+      +---------+---------+
+         |                                                     ^
+         | (3x Daily Scrape)                                   |
+         v                                                     |
++---------------------------------------------+                |
+|           GitHub Actions Runner             |----------------+
+|  1. Scrape new posts (src.scraper.runner)   |
+|  2. Match & dispatch (src.notifier.runner)  |
++---------------------------------------------+
+```
+
+### 1. User-Facing Bot (Serverless Webhook)
+- **Runtime:** Vercel Python Function (`api/webhook.py`) powered by FastAPI.
+- **Protocol:** HTTPS Webhook (`POST /api/webhook`). Telegram pushes updates directly to the endpoint.
+- **State:** Stateless and scales to zero when idle, eliminating idle process crashes and costs.
+
+### 2. Scheduled Scraper and Notifier
+- **Runtime:** GitHub Actions scheduled workflow (`.github/workflows/scrape_and_notify.yml`).
+- **Frequency:** 3 times daily (05:00, 11:00, 17:00 UTC).
+- **Execution:**
+  1. `src.scraper.runner`: Connects to Telegram via Telethon, scrapes new messages from configured channels past the recorded watermark, and stores vacancies in Supabase.
+  2. `src.notifier.runner`: Reads all active user preferences from Supabase, finds matches, publishes detailed Telegraph summaries, and sends alert messages via Telegram Bot API.
+- **Keepalive:** A weekly workflow (`.github/workflows/keepalive.yml`) prevents GitHub from automatically disabling scheduled jobs after 60 days of repository inactivity.
+
+### 3. Database Layer
+- **Provider:** Supabase (PostgreSQL).
+- **Schema Management:** Checked-in SQL migrations located in `migrations/`.
+
+---
+
+## Repository Structure
+
+```
+.
+├── api/
+│   └── webhook.py                 # FastAPI webhook entry point for Vercel
+├── src/
+│   ├── bot/
+│   │   ├── formatters.py          # Telegraph page generation and Telegram formatting
+│   │   └── handlers.py            # Bot command and callback query handlers
+│   ├── db/
+│   │   ├── client.py              # Supabase client singleton
+│   │   ├── jobs.py                # Job listings data access
+│   │   ├── scraper_state.py       # Per-channel scrape watermarks
+│   │   └── users.py               # User records and preferences data access
+│   ├── notifier/
+│   │   └── runner.py              # Single-run preference matcher and dispatcher
+│   ├── scraper/
+│   │   ├── keywords.txt           # Vacancy detection keywords
+│   │   └── runner.py              # Single-run Telethon channel scraper
+│   ├── config.py                  # Environment variable configuration and constants
+│   └── policy.py                  # Privacy policy generator
+├── scripts/
+│   └── generate_session.py        # Utility to generate Telethon StringSession for CI
+├── migrations/
+│   └── 001_initial_schema.sql     # Database tables, indexes, and constraints
+├── tests/
+│   ├── test_db.py
+│   ├── test_formatters.py
+│   ├── test_matching.py
+│   ├── test_scraper.py
+│   └── test_webhook.py
+├── .github/workflows/
+│   ├── keepalive.yml              # Weekly workflow keepalive
+│   └── scrape_and_notify.yml      # 3x daily scrape and dispatch workflow
+├── .env.example                   # Environment configuration template
+├── requirements.txt               # Python package dependencies
+└── vercel.json                    # Serverless routing configuration
+```
+
+---
+
+## Setup and Local Development
 
 ### Prerequisites
+- Python 3.10 or higher
+- A Telegram account with API credentials from [my.telegram.org](https://my.telegram.org)
+- A Telegram bot created via [@BotFather](https://t.me/BotFather)
+- A [Supabase](https://supabase.com) project
 
-- Python 3.9+
-- Supabase account
-- Telegram Bot Token
-- Telegram API credentials
+### 1. Installation
 
-### 1. Database Setup
+Clone the repository and install the required dependencies:
 
-1. Create a new project in [Supabase](https://supabase.com)
-2. Copy the SQL from `schema.sql` into Supabase SQL Editor
-3. Run the SQL script to create necessary tables
+```bash
+git clone https://github.com/DanielKinnito/Career-Fit-Jobs-Bot.git
+cd Career-Fit-Jobs-Bot
+pip install -r requirements.txt
+```
 
-### 2. Environment Setup
+### 2. Configuration
 
-1. 📋 Clone the repository
+Copy the example environment configuration:
 
-    ```bash
-    git clone https://github.com/Dagmawi-M/Career-Fit-Job-bot.git
-    cd Career-Fit-Job-bot
-    ```
+```bash
+cp .env.example .env
+```
 
-2. 📦 Install dependencies
+Populate `.env` with your credentials:
 
-    ```bash
-    pip install -r requirements.txt
-    ```
+```env
+# Telegram Bot API
+TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrSTUvwxYZ
+TELEGRAM_API_ID=12345678
+TELEGRAM_API_HASH=0123456789abcdef0123456789abcdef
 
-3. 🔑 Configure environment variables
+# Supabase REST API
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_KEY=your-supabase-anon-or-service-key
 
-- Copy `.env.example` to `.env`
-- Add your credentials:
-  - `TELEGRAM_BOT_TOKEN`
-  - `TELEGRAM_API_ID`
-  - `TELEGRAM_API_HASH`
-  - `SUPABASE_URL`
-  - `SUPABASE_KEY`
-  - `HEROKU_API_KEY` (for deployment)
-  - `HEROKU_APP_NAME` (for deployment)
+# Direct PostgreSQL Connection (special characters in password must be percent-encoded)
+SUPABASE_DB_URL=postgresql://postgres:encoded_password@db.your-project-ref.supabase.co:5432/postgres
 
-### 3. Deploying to Heroku
+# Webhook Secret (arbitrary string used to authenticate Telegram webhook payloads)
+WEBHOOK_SECRET=your_custom_secret_token
+```
 
-1. **Create a Heroku Account**: If you don't have one, sign up at [Heroku](https://www.heroku.com).
+### 3. Database Migration
 
-2. **Install the Heroku CLI**: Follow the instructions [here](https://devcenter.heroku.com/articles/heroku-cli) to install the Heroku Command Line Interface.
+Execute `migrations/001_initial_schema.sql` inside the Supabase SQL Editor. This provisions:
+- `users`: Registered users and their category preferences.
+- `user_profiles`: User CV storage paths, skills, and experience.
+- `job_listings`: Scraped vacancies.
+- `applications`: Job application tracking by link.
+- `job_suggestions`: User-suggested jobs for review.
+- `scraper_state`: Persistent per-channel scrape watermarks.
 
-3. **Login to Heroku**: Open your terminal and run:
+### 4. Running Tests
 
-    ```bash
-    heroku login
-    ```
+Run the test suite using pytest:
 
-4. **Create a New Heroku App**:
+```bash
+pytest tests/ -v
+```
 
-    ```bash
-    heroku create your-app-name
-    ```
+---
 
-5. **Set Environment Variables**: Set your environment variables on Heroku:
+## Running Components Locally
 
-    ```bash
-    heroku config:set TELEGRAM_BOT_TOKEN=your_token_here
-    heroku config:set TELEGRAM_API_ID=your_api_id_here
-    heroku config:set TELEGRAM_API_HASH=your_api_hash_here
-    heroku config:set SUPABASE_URL=your_supabase_url_here
-    heroku config:set SUPABASE_KEY=your_supabase_key_here
-    heroku config:set HEROKU_API_KEY=your_heroku_api_key_here
-    ```
+### Running the Webhook Bot Locally
 
-6. **Deploy Your Code**: Push your code to Heroku:
+To test webhook handling locally, start the FastAPI server with Uvicorn:
 
-    ```bash
-    git push heroku main  # or your branch name
-    ```
+```bash
+uvicorn api.webhook:app --reload --port 8000
+```
 
-7. **Scale Your Dynos**: Ensure your worker dyno is running:
+To connect Telegram to your local instance, expose your local port via a reverse proxy (e.g. `ngrok http 8000`) and configure the webhook:
 
-    ```bash
-    heroku ps:scale worker=1 --app your-app-name
-    ```
+```bash
+curl -F "url=https://<your-ngrok-subdomain>.ngrok-free.app/api/webhook" \
+     -F "secret_token=your_custom_secret_token" \
+     https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
+```
 
-8. **Monitor Logs**: Check the logs to ensure everything is running smoothly:
+### Running the Scraper Locally
 
-    ```bash
-    heroku logs --tail --app your-app-name
-    ```
+The scraper runs a single pass over configured channels and records its progress in Supabase:
 
-## 💡 How it Works
+```bash
+python -m src.scraper.runner
+```
 
-1. 🤖 Scraper collects jobs from Ethiopian Telegram channels
-2. 🎯 Bot matches jobs with user preferences
-3. 📬 Sends personalized updates via Telegram
-4. 🧹 Auto-cleans database to maintain performance
+On first run without a session string, Telethon will prompt in the terminal for your phone number and verification code.
 
-## 📝 License
+### Running the Notifier Locally
 
-MIT License - feel free to use and modify!
+To manually trigger preference matching and dispatch updates:
+
+```bash
+python -m src.notifier.runner
+```
+
+---
+
+## Production Deployment
+
+### 1. Webhook Bot on Vercel
+1. Link your repository to a new project on [Vercel](https://vercel.com).
+2. Configure environment variables in the Vercel dashboard:
+   - `TELEGRAM_BOT_TOKEN`
+   - `SUPABASE_URL`
+   - `SUPABASE_KEY`
+   - `WEBHOOK_SECRET`
+3. Deploy the project. Vercel will automatically build `api/webhook.py` using `@vercel/python`.
+4. Register the production webhook with Telegram:
+   ```bash
+   curl -F "url=https://<your-app>.vercel.app/api/webhook" \
+        -F "secret_token=<YOUR_WEBHOOK_SECRET>" \
+        https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook
+   ```
+
+### 2. Scheduled Workflows on GitHub Actions
+1. Generate an in-memory Telethon session string:
+   ```bash
+   python scripts/generate_session.py
+   ```
+2. In your GitHub repository settings under **Settings > Secrets and variables > Actions**, add:
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_API_ID`
+   - `TELEGRAM_API_HASH`
+   - `TELETHON_SESSION_STRING`
+   - `SUPABASE_URL`
+   - `SUPABASE_KEY`
+3. The `scrape_and_notify.yml` workflow will automatically run on schedule or can be triggered manually via **Actions > Run workflow**.
+
+---
+
+## License
+
+This project is licensed under the MIT License.
