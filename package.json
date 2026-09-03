@@ -1,0 +1,12 @@
+{
+  "name": "career-fit-jobs-bot",
+  "version": "1.0.0",
+  "description": "Career Fit Jobs Bot - Telegram Mini App",
+  "private": true,
+  "scripts": {
+    "postinstall": "echo 'Speed Insights package installed successfully'"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.12"
+  }
+}

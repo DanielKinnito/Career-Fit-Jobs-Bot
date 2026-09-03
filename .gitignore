@@ -40,3 +40,6 @@ Thumbs.db
 # Agent skills cache
 .agents/skills/
 .claude/
+
+# Node.js dependencies
+node_modules/
