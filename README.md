@@ -48,6 +48,11 @@ The system is decoupled into two independent execution environments sharing a ce
 - **Provider:** Supabase (PostgreSQL).
 - **Schema Management:** Checked-in SQL migrations located in `migrations/`.
 
+### 4. Analytics and Monitoring
+- **Web Analytics:** Vercel Web Analytics is integrated into the Telegram Mini App (`api/static/app.html`) to track page views, user interactions, and engagement metrics.
+- **Privacy-First:** Uses Vercel's cookie-free analytics approach with daily-rotating hashes for visitor privacy.
+- **Setup:** Analytics must be enabled in the Vercel project dashboard under the Analytics tab. Once enabled, data will be collected automatically from the Mini App without requiring additional configuration.
+
 ---
 
 ## Repository Structure
@@ -205,7 +210,11 @@ python -m src.notifier.runner
    - `SUPABASE_KEY`
    - `WEBHOOK_SECRET`
 3. Deploy the project. Vercel will automatically build `api/webhook.py` using `@vercel/python`.
-4. Register the production webhook with Telegram:
+4. **Enable Web Analytics** (Optional):
+   - Navigate to your project's **Analytics** tab in the Vercel dashboard
+   - Click **Enable Web Analytics** to activate tracking for the Mini App
+   - Analytics will begin collecting data on the next deployment
+5. Register the production webhook with Telegram:
    ```bash
    curl -F "url=https://<your-app>.vercel.app/api/webhook" \
         -F "secret_token=<YOUR_WEBHOOK_SECRET>" \
