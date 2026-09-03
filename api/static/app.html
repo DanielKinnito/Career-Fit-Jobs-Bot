@@ -3,40 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Career Fit Preferences</title>
+  <title>Career Fit</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --bg-color: var(--tg-theme-bg-color, #0f1115);
-      --secondary-bg: var(--tg-theme-secondary-bg-color, #181a20);
-      --text-color: var(--tg-theme-text-color, #f4f4f6);
-      --hint-color: var(--tg-theme-hint-color, #8e8e93);
-      --accent-color: var(--tg-theme-button-color, #0a84ff);
-      --accent-text: var(--tg-theme-button-text-color, #ffffff);
-      --card-bg: rgba(255, 255, 255, 0.05);
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+      --bg-color: #0b0d11;
+      --surface-color: #14171f;
+      --card-bg: rgba(255, 255, 255, 0.04);
       --card-border: rgba(255, 255, 255, 0.08);
-      --chip-bg: rgba(255, 255, 255, 0.07);
-      --chip-active-bg: #0a84ff;
-      --chip-active-text: #ffffff;
-      --glass-surface: rgba(24, 26, 32, 0.75);
+      --glass-surface: rgba(18, 21, 28, 0.76);
       --glass-border: rgba(255, 255, 255, 0.12);
+      --text-primary: #f5f6f8;
+      --text-secondary: #9aa0a6;
+      --text-tertiary: #6b7280;
+      --accent-blue: #0a84ff;
+      --accent-blue-subtle: rgba(10, 132, 255, 0.15);
+      --accent-green: #30d158;
+      --accent-card: rgba(255, 255, 255, 0.06);
+      --chip-bg: rgba(255, 255, 255, 0.07);
+      --chip-border: rgba(255, 255, 255, 0.1);
+      --chip-active: #0a84ff;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
     }
 
     @media (prefers-color-scheme: light) {
       :root {
-        --bg-color: var(--tg-theme-bg-color, #f2f2f7);
-        --secondary-bg: var(--tg-theme-secondary-bg-color, #ffffff);
-        --text-color: var(--tg-theme-text-color, #1c1c1e);
-        --hint-color: var(--tg-theme-hint-color, #8e8e93);
-        --accent-color: var(--tg-theme-button-color, #007aff);
-        --accent-text: #ffffff;
-        --card-bg: rgba(255, 255, 255, 0.8);
+        --bg-color: #f2f2f7;
+        --surface-color: #ffffff;
+        --card-bg: #ffffff;
         --card-border: rgba(0, 0, 0, 0.06);
-        --chip-bg: rgba(0, 0, 0, 0.05);
-        --chip-active-bg: #007aff;
         --glass-surface: rgba(255, 255, 255, 0.82);
         --glass-border: rgba(0, 0, 0, 0.08);
+        --text-primary: #1c1c1e;
+        --text-secondary: #636366;
+        --text-tertiary: #8e8e93;
+        --accent-blue: #007aff;
+        --accent-blue-subtle: rgba(0, 122, 255, 0.12);
+        --accent-green: #34c759;
+        --accent-card: #ffffff;
+        --chip-bg: rgba(0, 0, 0, 0.05);
+        --chip-border: rgba(0, 0, 0, 0.07);
+        --chip-active: #007aff;
       }
     }
 
@@ -50,44 +61,61 @@
     body {
       font-family: var(--font-family);
       background-color: var(--bg-color);
-      color: var(--text-color);
+      color: var(--text-primary);
       min-height: 100vh;
-      padding-bottom: 96px;
+      padding-bottom: 110px;
       overflow-x: hidden;
       letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
     }
 
+    /* Top Sticky Header */
     header {
       position: sticky;
       top: 0;
       z-index: 100;
       background: var(--glass-surface);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
       border-bottom: 1px solid var(--glass-border);
       padding: 16px 20px 12px;
+      transition: all 0.2s ease;
     }
 
-    .title-row {
+    .header-top {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
     }
 
-    h1 {
-      font-size: 24px;
+    .brand-title {
+      font-size: 26px;
       font-weight: 700;
-      letter-spacing: -0.025em;
+      letter-spacing: -0.03em;
+      background: linear-gradient(180deg, var(--text-primary) 0%, var(--text-secondary) 130%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .counter {
-      font-size: 13px;
+    .header-badge {
+      font-size: 12px;
       font-weight: 600;
-      color: var(--hint-color);
+      color: var(--accent-blue);
+      background: var(--accent-blue-subtle);
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.02em;
     }
 
-    .search-box {
+    .header-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    /* Search Bar */
+    .search-wrap {
       position: relative;
       display: flex;
       align-items: center;
@@ -98,48 +126,224 @@
       height: 38px;
       background: var(--chip-bg);
       border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 0 36px 0 12px;
-      color: var(--text-color);
+      border-radius: var(--radius-sm);
+      padding: 0 34px 0 12px;
+      color: var(--text-primary);
       font-family: inherit;
-      font-size: 15px;
+      font-size: 14px;
       outline: none;
-      transition: border-color 0.2s ease, background-color 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
     .search-input:focus {
-      border-color: var(--accent-color);
-      background: var(--secondary-bg);
+      border-color: var(--accent-blue);
+      background: var(--surface-color);
+      box-shadow: 0 0 0 3px var(--accent-blue-subtle);
     }
 
-    .clear-search {
+    .search-clear {
       position: absolute;
       right: 10px;
       background: none;
       border: none;
-      color: var(--hint-color);
+      color: var(--text-tertiary);
       font-size: 16px;
       cursor: pointer;
       display: none;
     }
 
-    main {
+    /* Tab Content Containers */
+    .tab-content {
+      display: none;
       padding: 16px 20px;
+      animation: tabFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .sector-group {
-      margin-bottom: 24px;
+    .tab-content.active {
+      display: block;
     }
 
-    .sector-header {
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       TAB 1: JOBS FEED
+       ========================================================================== */
+    .filter-chips-row {
       display: flex;
-      align-items: center;
       gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 8px;
+      scrollbar-width: none;
+    }
+
+    .filter-chips-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      white-space: nowrap;
       font-size: 13px;
+      font-weight: 500;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, color 0.15s ease;
+    }
+
+    .filter-chip:active {
+      transform: scale(0.95);
+    }
+
+    .filter-chip.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+      font-weight: 600;
+    }
+
+    .jobs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .job-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s ease;
+    }
+
+    .job-card:active {
+      transform: scale(0.985);
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .job-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--text-primary);
+    }
+
+    .job-source-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-blue);
+      background: var(--accent-blue-subtle);
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+    }
+
+    .job-summary {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.45;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .job-summary.expanded {
+      -webkit-line-clamp: unset;
+    }
+
+    .job-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 10px;
+      border-top: 1px solid var(--card-border);
+    }
+
+    .job-time {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .btn-apply {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--accent-blue);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      transition: opacity 0.15s ease;
+    }
+
+    .btn-apply:hover {
+      opacity: 0.9;
+    }
+
+    /* ==========================================================================
+       TAB 2: PREFERENCES
+       ========================================================================== */
+    .sector-nav {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+      scrollbar-width: none;
+    }
+
+    .sector-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .sector-tab-btn {
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 14px;
+      border-radius: var(--radius-full);
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+    }
+
+    .sector-tab-btn.active {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.28);
+    }
+
+    .sector-title {
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: var(--hint-color);
+      color: var(--text-tertiary);
       margin-bottom: 10px;
     }
 
@@ -147,6 +351,7 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+      margin-bottom: 24px;
     }
 
     .chip {
@@ -155,10 +360,10 @@
       align-items: center;
       gap: 6px;
       padding: 8px 14px;
-      border-radius: 20px;
+      border-radius: var(--radius-full);
       background: var(--chip-bg);
-      border: 1px solid var(--card-border);
-      color: var(--text-color);
+      border: 1px solid var(--chip-border);
+      color: var(--text-primary);
       font-size: 14px;
       font-weight: 500;
       cursor: pointer;
@@ -171,15 +376,14 @@
     }
 
     .chip.selected {
-      background: var(--chip-active-bg);
-      border-color: var(--chip-active-bg);
-      color: var(--chip-active-text);
+      background: var(--chip-active);
+      border-color: var(--chip-active);
+      color: #ffffff;
       font-weight: 600;
-      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.28);
+      box-shadow: 0 4px 12px rgba(10, 132, 255, 0.25);
     }
 
-    .chip .indicator {
-      display: inline-block;
+    .chip .chip-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
@@ -187,107 +391,291 @@
       transition: background 0.15s ease;
     }
 
-    .chip.selected .indicator {
+    .chip.selected .chip-dot {
       background: #ffffff;
     }
 
-    .floating-bar {
+    /* Floating Save Bar */
+    .floating-save-bar {
+      position: fixed;
+      bottom: 64px;
+      left: 16px;
+      right: 16px;
+      z-index: 90;
+      background: var(--glass-surface);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .counter-text {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .btn-save-pref {
+      height: 40px;
+      padding: 0 20px;
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .btn-save-pref:active {
+      transform: scale(0.96);
+    }
+
+    /* ==========================================================================
+       TAB 3: PROFILE
+       ========================================================================== */
+    .profile-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .user-hero {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .user-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .user-name {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .user-id-tag {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-top: 1px solid var(--card-border);
+      font-size: 14px;
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+    }
+
+    .stat-value {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .preview-box {
+      background: var(--card-bg);
+      border: 1px dashed var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: center;
+    }
+
+    .preview-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--accent-blue);
+    }
+
+    .preview-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* ==========================================================================
+       FLOATING SEGMENTED BOTTOM BAR (APPLE STYLE)
+       ========================================================================== */
+    .tab-bar {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
       z-index: 100;
       background: var(--glass-surface);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      backdrop-filter: blur(28px) saturate(190%);
+      -webkit-backdrop-filter: blur(28px) saturate(190%);
       border-top: 1px solid var(--glass-border);
-      padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+      padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px));
       display: flex;
+      justify-content: space-around;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
     }
 
-    .btn-clear {
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
       background: none;
       border: none;
-      color: var(--hint-color);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      padding: 10px 12px;
-      border-radius: 10px;
-      transition: color 0.15s ease;
-    }
-
-    .btn-clear:hover {
-      color: #ff453a;
-    }
-
-    .btn-save {
-      flex: 1;
-      height: 46px;
-      background: var(--accent-color);
-      color: var(--accent-text);
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
+      color: var(--text-tertiary);
       font-family: inherit;
+      font-size: 11px;
+      font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.15s ease;
+      padding: 6px 0;
+      user-select: none;
+      transition: color 0.15s ease, transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    .btn-save:active {
-      transform: scale(0.97);
+    .tab-btn:active {
+      transform: scale(0.92);
     }
 
-    .btn-save:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
+    .tab-btn.active {
+      color: var(--accent-blue);
     }
 
-    .empty-search {
+    .tab-icon {
+      font-size: 18px;
+    }
+
+    .empty-state {
       text-align: center;
       padding: 40px 20px;
-      color: var(--hint-color);
-      font-size: 15px;
-      display: none;
+      color: var(--text-secondary);
+      font-size: 14px;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .chip, .btn-save {
+      * {
         transition: none !important;
+        animation: none !important;
         transform: none !important;
       }
     }
   </style>
 </head>
 <body>
+
+  <!-- Top Header -->
   <header>
-    <div class="title-row">
-      <h1>Career Fit</h1>
-      <div class="counter" id="counter">0 / 15 selected</div>
+    <div class="header-top">
+      <h1 class="brand-title" id="page-title">Career Fit</h1>
+      <span class="header-badge" id="header-badge">Jobs Feed</span>
     </div>
-    <div class="search-box">
-      <input type="text" class="search-input" id="search" placeholder="Search categories..." autocomplete="off">
-      <button class="clear-search" id="clear-search">&times;</button>
+    <p class="header-subtitle" id="page-subtitle">Matching Ethiopia's top career channels to you</p>
+    <div class="search-wrap">
+      <input type="text" class="search-input" id="search-input" placeholder="Search vacancies or roles..." autocomplete="off">
+      <button class="search-clear" id="search-clear">&times;</button>
     </div>
   </header>
 
-  <main id="sectors-container">
-    <!-- Rendered dynamically -->
-  </main>
-  <div class="empty-search" id="empty-search">No matching categories found.</div>
-
-  <div class="floating-bar">
-    <button class="btn-clear" id="btn-clear">Clear</button>
-    <button class="btn-save" id="btn-save">Save Preferences</button>
+  <!-- TAB 1: JOBS FEED -->
+  <div class="tab-content active" id="tab-jobs">
+    <div class="filter-chips-row" id="jobs-filter-chips">
+      <div class="filter-chip active" data-filter="all">All Roles</div>
+    </div>
+    <div class="jobs-list" id="jobs-list">
+      <div class="empty-state">Loading latest matches...</div>
+    </div>
   </div>
+
+  <!-- TAB 2: PREFERENCES -->
+  <div class="tab-content" id="tab-preferences">
+    <div class="sector-nav" id="sector-nav-chips">
+      <!-- Generated dynamically -->
+    </div>
+    <div class="sector-title" id="active-sector-label">TECHNOLOGY & ENGINEERING</div>
+    <div class="chips-grid" id="category-chips-grid">
+      <!-- Generated dynamically -->
+    </div>
+
+    <!-- Floating Save Bar -->
+    <div class="floating-save-bar">
+      <div class="counter-text" id="pref-counter">0 / 15 selected</div>
+      <button class="btn-save-pref" id="btn-save-pref">Save Preferences</button>
+    </div>
+  </div>
+
+  <!-- TAB 3: PROFILE -->
+  <div class="tab-content" id="tab-profile">
+    <div class="profile-card">
+      <div class="user-hero">
+        <div class="user-avatar" id="profile-avatar">U</div>
+        <div>
+          <div class="user-name" id="profile-name">Telegram User</div>
+          <div class="user-id-tag" id="profile-id">ID: ---</div>
+        </div>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Active Career Targets</span>
+        <span class="stat-value" id="profile-pref-count">0 categories</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Alert Schedule</span>
+        <span class="stat-value">3x Daily (Instant View)</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Status</span>
+        <span class="stat-value" style="color: var(--accent-green);">Active</span>
+      </div>
+    </div>
+
+    <div class="preview-box">
+      <div class="preview-title">📄 CV Upload & Application Tracking</div>
+      <div class="preview-desc">
+        Store your CV securely in cloud storage and track job submissions automatically by sending links. Coming in the upcoming release.
+      </div>
+    </div>
+  </div>
+
+  <!-- Segmented Glass Bottom Tab Bar -->
+  <nav class="tab-bar">
+    <button class="tab-btn active" data-target="tab-jobs" id="tab-btn-jobs">
+      <span class="tab-icon">💼</span>
+      <span>Jobs</span>
+    </button>
+    <button class="tab-btn" data-target="tab-preferences" id="tab-btn-pref">
+      <span class="tab-icon">🎯</span>
+      <span>Preferences</span>
+    </button>
+    <button class="tab-btn" data-target="tab-profile" id="tab-btn-prof">
+      <span class="tab-icon">👤</span>
+      <span>Profile</span>
+    </button>
+  </nav>
 
   <script>
     const tg = window.Telegram?.WebApp;
@@ -298,191 +686,370 @@
 
     const SECTORS = [
       {
-        name: "Technology & Engineering",
+        id: "tech",
+        name: "Technology",
         icon: "💻",
+        fullName: "Technology & Engineering",
         categories: ["Developer", "Data Science", "Cybersecurity", "IT", "Engineer", "UX/UI Design", "Graphic Design"]
       },
       {
-        name: "Finance, Banking & Accounting",
+        id: "finance",
+        name: "Finance",
         icon: "💼",
+        fullName: "Finance & Banking",
         categories: ["Finance", "Bank", "Accounting", "Auditor", "Insurance", "Analyst"]
       },
       {
-        name: "Creative, Media & Comms",
+        id: "creative",
+        name: "Creative",
         icon: "🎨",
+        fullName: "Creative & Media",
         categories: ["Design", "Media", "Communications", "Content Creation", "Public Relations"]
       },
       {
-        name: "Sales & Marketing",
+        id: "sales",
+        name: "Sales",
         icon: "📢",
+        fullName: "Sales & Marketing",
         categories: ["Marketing", "Sales", "Product Management", "Salesforce"]
       },
       {
-        name: "Operations & Leadership",
+        id: "ops",
+        name: "Operations",
         icon: "🏢",
+        fullName: "Operations & Leadership",
         categories: ["Director", "Manager", "Coordinator", "Operations", "Project Management", "Logistics", "Supply Chain", "Administrative", "Assistant"]
       },
       {
-        name: "Services, NGO & Legal",
+        id: "services",
+        name: "Services",
         icon: "🌐",
+        fullName: "NGO & Services",
         categories: ["NGO", "Human Resources", "Lawyer", "Legal", "Consultant", "Customer Service", "Research", "Teacher", "Hospitality", "Event Planning"]
       }
     ];
 
-    const MAX_PREFERENCES = 15;
+    const MAX_PREFS = 15;
+    let currentTab = "tab-jobs";
+    let activeSectorId = "tech";
     let selectedCategories = new Set();
-    const telegramUserId = tg?.initDataUnsafe?.user?.id;
+    let loadedJobs = [];
+    let activeJobFilter = "all";
 
-    function haptic() {
+    const telegramUser = tg?.initDataUnsafe?.user;
+    const telegramId = telegramUser?.id;
+
+    function haptic(style = 'light') {
       if (tg?.HapticFeedback) {
-        tg.HapticFeedback.impactOccurred('light');
+        tg.HapticFeedback.impactOccurred(style);
       }
     }
 
-    function renderSectors(filterText = '') {
-      const container = document.getElementById('sectors-container');
+    function successHaptic() {
+      if (tg?.HapticFeedback) {
+        tg.HapticFeedback.notificationOccurred('success');
+      }
+    }
+
+    // ==========================================
+    // Tab Switching
+    // ==========================================
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        haptic();
+        const targetId = btn.getAttribute('data-target');
+        if (targetId === currentTab) return;
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.getElementById(targetId).classList.add('active');
+
+        currentTab = targetId;
+        updateHeaderForTab(targetId);
+      });
+    });
+
+    function updateHeaderForTab(tabId) {
+      const title = document.getElementById('page-title');
+      const badge = document.getElementById('header-badge');
+      const sub = document.getElementById('page-subtitle');
+      const search = document.getElementById('search-input');
+
+      if (tabId === 'tab-jobs') {
+        title.innerText = 'Career Fit';
+        badge.innerText = 'Jobs Feed';
+        sub.innerText = 'Matching Ethiopia\'s top career channels to you';
+        search.placeholder = 'Search vacancies or roles...';
+        search.parentElement.style.display = 'flex';
+      } else if (tabId === 'tab-preferences') {
+        title.innerText = 'Preferences';
+        badge.innerText = `${selectedCategories.size}/${MAX_PREFS} Selected`;
+        sub.innerText = 'Select up to 15 target categories';
+        search.placeholder = 'Search categories...';
+        search.parentElement.style.display = 'flex';
+      } else {
+        title.innerText = 'Profile';
+        badge.innerText = 'Active';
+        sub.innerText = 'Account settings and tracking';
+        search.parentElement.style.display = 'none';
+      }
+    }
+
+    // ==========================================
+    // Fetch and Render Jobs Feed
+    // ==========================================
+    async function loadJobsFeed() {
+      const container = document.getElementById('jobs-list');
+      container.innerHTML = '<div class="empty-state">Loading latest matches...</div>';
+
+      try {
+        const url = telegramId ? `/api/jobs?telegram_id=${telegramId}` : '/api/jobs';
+        const res = await fetch(url);
+        const data = await res.json();
+        loadedJobs = data.jobs || [];
+
+        renderJobFilterChips();
+        renderJobsList();
+      } catch (e) {
+        container.innerHTML = '<div class="empty-state">Could not load job feed. Please try again later.</div>';
+      }
+    }
+
+    function renderJobFilterChips() {
+      const container = document.getElementById('jobs-filter-chips');
       container.innerHTML = '';
-      let totalVisible = 0;
 
-      SECTORS.forEach(sector => {
-        const filtered = sector.categories.filter(c => c.toLowerCase().includes(filterText.toLowerCase()));
-        if (filtered.length === 0) return;
+      const allChip = document.createElement('div');
+      allChip.className = `filter-chip ${activeJobFilter === 'all' ? 'active' : ''}`;
+      allChip.innerText = 'All Roles';
+      allChip.addEventListener('click', () => {
+        haptic();
+        activeJobFilter = 'all';
+        renderJobFilterChips();
+        renderJobsList();
+      });
+      container.appendChild(allChip);
 
-        totalVisible += filtered.length;
-        const group = document.createElement('div');
-        group.className = 'sector-group';
-
-        const header = document.createElement('div');
-        header.className = 'sector-header';
-        header.innerHTML = `<span>${sector.icon}</span><span>${sector.name}</span>`;
-        group.appendChild(header);
-
-        const chipsGrid = document.createElement('div');
-        chipsGrid.className = 'chips-grid';
-
-        filtered.forEach(category => {
-          const chip = document.createElement('div');
-          const isSelected = selectedCategories.has(category);
-          chip.className = `chip ${isSelected ? 'selected' : ''}`;
-          chip.innerHTML = `<span class="indicator"></span><span>${category}</span>`;
-          chip.addEventListener('click', () => toggleCategory(category, chip));
-          chipsGrid.appendChild(chip);
+      selectedCategories.forEach(cat => {
+        const chip = document.createElement('div');
+        chip.className = `filter-chip ${activeJobFilter === cat ? 'active' : ''}`;
+        chip.innerText = cat;
+        chip.addEventListener('click', () => {
+          haptic();
+          activeJobFilter = cat;
+          renderJobFilterChips();
+          renderJobsList();
         });
+        container.appendChild(chip);
+      });
+    }
 
-        group.appendChild(chipsGrid);
-        container.appendChild(group);
+    function renderJobsList(filterQuery = '') {
+      const container = document.getElementById('jobs-list');
+      const query = filterQuery.toLowerCase();
+
+      let jobs = loadedJobs.filter(job => {
+        const text = ((job.summary || '') + ' ' + (job.channel || '')).toLowerCase();
+        const matchesSearch = !query || text.includes(query);
+        const matchesCategory = activeJobFilter === 'all' || text.includes(activeJobFilter.toLowerCase());
+        return matchesSearch && matchesCategory;
       });
 
-      document.getElementById('empty-search').style.display = totalVisible === 0 ? 'block' : 'none';
+      if (jobs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No matching vacancies found. Try selecting different categories in Preferences!</div>';
+        return;
+      }
+
+      container.innerHTML = '';
+      jobs.forEach(job => {
+        const card = document.createElement('div');
+        card.className = 'job-card';
+
+        const lines = (job.summary || '').split('\n').filter(l => l.trim());
+        const title = lines[0] ? lines[0].replace(/[*_#]/g, '').trim() : 'Job Vacancy';
+        const body = lines.slice(1).join('\n').replace(/[*_#]/g, '').trim();
+
+        card.innerHTML = `
+          <div class="job-header">
+            <div class="job-title">${title}</div>
+            <div class="job-source-tag">${job.channel || 'Telegram'}</div>
+          </div>
+          <div class="job-summary" id="sum-${job.id}">${body || title}</div>
+          <div class="job-footer">
+            <span class="job-time">${job.scraped_at ? new Date(job.scraped_at).toLocaleDateString() : 'Recent'}</span>
+            <a class="btn-apply" href="${job.message_link || '#'}" target="_blank">View Post ↗</a>
+          </div>
+        `;
+
+        const summaryEl = card.querySelector('.job-summary');
+        summaryEl.addEventListener('click', () => {
+          haptic();
+          summaryEl.classList.toggle('expanded');
+        });
+
+        container.appendChild(card);
+      });
+    }
+
+    // ==========================================
+    // Preferences Tab Logic
+    // ==========================================
+    function renderSectorNav() {
+      const nav = document.getElementById('sector-nav-chips');
+      nav.innerHTML = '';
+      SECTORS.forEach(sec => {
+        const btn = document.createElement('button');
+        btn.className = `sector-tab-btn ${sec.id === activeSectorId ? 'active' : ''}`;
+        btn.innerHTML = `${sec.icon} ${sec.name}`;
+        btn.addEventListener('click', () => {
+          haptic();
+          activeSectorId = sec.id;
+          renderSectorNav();
+          renderCategoryChips();
+        });
+        nav.appendChild(btn);
+      });
+    }
+
+    function renderCategoryChips(searchFilter = '') {
+      const sec = SECTORS.find(s => s.id === activeSectorId) || SECTORS[0];
+      document.getElementById('active-sector-label').innerText = sec.fullName.toUpperCase();
+
+      const grid = document.getElementById('category-chips-grid');
+      grid.innerHTML = '';
+
+      const query = searchFilter.toLowerCase();
+      const categories = searchFilter ?
+        SECTORS.flatMap(s => s.categories).filter(c => c.toLowerCase().includes(query)) :
+        sec.categories;
+
+      categories.forEach(cat => {
+        const chip = document.createElement('div');
+        const isSel = selectedCategories.has(cat);
+        chip.className = `chip ${isSel ? 'selected' : ''}`;
+        chip.innerHTML = `<span class="chip-dot"></span><span>${cat}</span>`;
+        chip.addEventListener('click', () => toggleCategory(cat, chip));
+        grid.appendChild(chip);
+      });
+
       updateCounter();
     }
 
-    function toggleCategory(category, chipElement) {
+    function toggleCategory(cat, chip) {
       haptic();
-      if (selectedCategories.has(category)) {
-        selectedCategories.delete(category);
-        chipElement.classList.remove('selected');
+      if (selectedCategories.has(cat)) {
+        selectedCategories.delete(cat);
+        chip.classList.remove('selected');
       } else {
-        if (selectedCategories.size >= MAX_PREFERENCES) {
-          if (tg?.showAlert) {
-            tg.showAlert(`You can select a maximum of ${MAX_PREFERENCES} categories.`);
-          } else {
-            alert(`Maximum ${MAX_PREFERENCES} categories allowed.`);
-          }
+        if (selectedCategories.size >= MAX_PREFS) {
+          if (tg?.showAlert) tg.showAlert(`Maximum ${MAX_PREFS} categories allowed.`);
+          else alert(`Maximum ${MAX_PREFS} categories allowed.`);
           return;
         }
-        selectedCategories.add(category);
-        chipElement.classList.add('selected');
+        selectedCategories.add(cat);
+        chip.classList.add('selected');
       }
       updateCounter();
     }
 
     function updateCounter() {
       const count = selectedCategories.size;
-      document.getElementById('counter').innerText = `${count} / ${MAX_PREFERENCES} selected`;
-      const saveBtn = document.getElementById('btn-save');
-      saveBtn.disabled = count === 0;
-    }
-
-    // Load initial preferences
-    async function loadInitialPreferences() {
-      if (telegramUserId) {
-        try {
-          const res = await fetch(`/api/user-preferences?telegram_id=${telegramUserId}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (Array.isArray(data.preferences)) {
-              selectedCategories = new Set(data.preferences);
-            }
-          }
-        } catch (e) {
-          console.warn("Could not fetch user preferences:", e);
-        }
+      document.getElementById('pref-counter').innerText = `${count} / ${MAX_PREFS} selected`;
+      document.getElementById('profile-pref-count').innerText = `${count} categories`;
+      if (currentTab === 'tab-preferences') {
+        document.getElementById('header-badge').innerText = `${count}/${MAX_PREFS} Selected`;
       }
-      renderSectors();
     }
-
-    // Search filtering
-    const searchInput = document.getElementById('search');
-    const clearSearch = document.getElementById('clear-search');
-
-    searchInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      clearSearch.style.display = val ? 'block' : 'none';
-      renderSectors(val);
-    });
-
-    clearSearch.addEventListener('click', () => {
-      searchInput.value = '';
-      clearSearch.style.display = 'none';
-      renderSectors('');
-    });
-
-    document.getElementById('btn-clear').addEventListener('click', () => {
-      haptic();
-      selectedCategories.clear();
-      renderSectors(searchInput.value.trim());
-    });
 
     // Save preferences
-    document.getElementById('btn-save').addEventListener('click', async () => {
-      if (selectedCategories.size === 0) return;
-      haptic();
+    document.getElementById('btn-save-pref').addEventListener('click', async () => {
+      if (selectedCategories.size === 0) {
+        if (tg?.showAlert) tg.showAlert('Please select at least one category.');
+        else alert('Please select at least one category.');
+        return;
+      }
+      successHaptic();
+      const list = Array.from(selectedCategories);
 
-      const preferencesList = Array.from(selectedCategories);
-
-      // If in Telegram Web App, we can sendData back to the bot
       if (tg?.sendData) {
-        tg.sendData(JSON.stringify({
-          action: "set_preferences",
-          preferences: preferencesList
-        }));
+        tg.sendData(JSON.stringify({ action: 'set_preferences', preferences: list }));
         tg.close();
         return;
       }
 
-      // Or fallback to direct API call
-      if (telegramUserId) {
+      if (telegramId) {
         try {
-          const res = await fetch('/api/user-preferences', {
+          await fetch('/api/user-preferences', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              telegram_id: telegramUserId,
-              preferences: preferencesList
-            })
+            body: JSON.stringify({ telegram_id: telegramId, preferences: list })
           });
-          if (res.ok) {
-            alert('Preferences saved successfully!');
-            if (tg?.close) tg.close();
-          }
-        } catch (err) {
-          alert('Failed to save preferences. Please try again.');
+          alert('Preferences saved successfully!');
+        } catch (e) {
+          alert('Failed to save preferences.');
         }
       }
     });
 
-    loadInitialPreferences();
+    // Profile Setup
+    function setupProfile() {
+      if (telegramUser) {
+        document.getElementById('profile-name').innerText = `${telegramUser.first_name || ''} ${telegramUser.last_name || ''}`.trim() || 'Telegram User';
+        document.getElementById('profile-id').innerText = `ID: ${telegramUser.id}`;
+        document.getElementById('profile-avatar').innerText = (telegramUser.first_name || 'U')[0].toUpperCase();
+      }
+    }
+
+    // Search Handling
+    const searchInput = document.getElementById('search-input');
+    const searchClear = document.getElementById('search-clear');
+
+    searchInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim();
+      searchClear.style.display = val ? 'block' : 'none';
+      if (currentTab === 'tab-jobs') {
+        renderJobsList(val);
+      } else if (currentTab === 'tab-preferences') {
+        renderCategoryChips(val);
+      }
+    });
+
+    searchClear.addEventListener('click', () => {
+      searchInput.value = '';
+      searchClear.style.display = 'none';
+      if (currentTab === 'tab-jobs') {
+        renderJobsList('');
+      } else if (currentTab === 'tab-preferences') {
+        renderCategoryChips('');
+      }
+    });
+
+    // Initialize Everything
+    async function init() {
+      setupProfile();
+      renderSectorNav();
+      renderCategoryChips();
+
+      if (telegramId) {
+        try {
+          const res = await fetch(`/api/user-preferences?telegram_id=${telegramId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.preferences)) {
+              selectedCategories = new Set(data.preferences);
+              updateCounter();
+              renderCategoryChips();
+            }
+          }
+        } catch (e) {}
+      }
+
+      loadJobsFeed();
+    }
+
+    init();
   </script>
 </body>
 </html>

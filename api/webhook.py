@@ -18,6 +18,7 @@ from telegram.ext import Application
 from src.config import TELEGRAM_BOT_TOKEN, WEBHOOK_SECRET
 from src.bot.handlers import register_handlers
 from src.db.users import get_user_preferences, update_user_preferences, get_or_create_user
+from src.db.jobs import get_matched_jobs_for_user, get_recent_job_listings
 
 logging.basicConfig(
     level=logging.INFO,
@@ -80,6 +81,19 @@ async def serve_mini_app():
 class PreferencesPayload(BaseModel):
     telegram_id: int
     preferences: List[str]
+
+
+@app.get("/api/jobs")
+async def get_jobs_feed(telegram_id: Optional[int] = None):
+    """Retrieve job matches for a user, or recent vacancies if no ID is specified."""
+    if telegram_id:
+        prefs = get_user_preferences(telegram_id)
+        if prefs:
+            jobs = get_matched_jobs_for_user(prefs, limit=50)
+            return {"jobs": jobs, "preferences": prefs, "matched": True}
+    # Fallback to recent postings
+    jobs = get_recent_job_listings(limit=40)
+    return {"jobs": jobs, "preferences": [], "matched": False}
 
 
 @app.get("/api/user-preferences")

@@ -14,6 +14,9 @@ from telegram.ext import (
 )
 from src.config import JOB_CATEGORIES, WEBHOOK_URL
 from src.db.users import get_or_create_user, update_user_preferences, get_user_preferences
+from src.db.jobs import get_matched_jobs_for_user
+from src.notifier.runner import match_jobs_with_preferences
+from src.bot.formatters import create_job_update_telegraph_page
 from src.policy import get_privacy_policy_url
 
 logger = logging.getLogger(__name__)
@@ -72,14 +75,15 @@ def build_apple_style_keyboard(
     """Build an Apple-inspired grouped keyboard with sector tabs, chips, and actions."""
     keyboard = []
 
-    # Optional Mini App banner button
+    # 1. Prominent Action Header (Mini App + On-Demand Jobs)
+    top_actions = []
     app_url = get_web_app_url()
     if app_url:
-        keyboard.append([
-            InlineKeyboardButton("📱 Open Interactive App", web_app=WebAppInfo(url=app_url))
-        ])
+        top_actions.append(InlineKeyboardButton("📱 Open Interactive App", web_app=WebAppInfo(url=app_url)))
+    top_actions.append(InlineKeyboardButton("⚡ Latest Matches", callback_data="action_get_jobs"))
+    keyboard.append(top_actions)
 
-    # 1. Sector Switcher Tabs (2 rows of 3 sectors)
+    # 2. Sector Switcher Tabs (2 rows of 3 sectors)
     sector_keys = list(SECTORS.keys())
     row1 = []
     row2 = []
@@ -95,7 +99,7 @@ def build_apple_style_keyboard(
     keyboard.append(row1)
     keyboard.append(row2)
 
-    # 2. Category Chips for Active Sector (Clean 2-column layout)
+    # 3. Category Chips for Active Sector (Clean 2-column layout)
     sector_info = SECTORS.get(active_sector, SECTORS["tech"])
     categories = sector_info["categories"]
 
@@ -111,7 +115,7 @@ def build_apple_style_keyboard(
             keyboard.append(chip_row)
             chip_row = []
 
-    # 3. Action Bar (Clear & Save)
+    # 4. Action Bar (Clear & Save)
     count = len(selected_preferences)
     save_label = f"💾 Save Preferences ({count})" if count > 0 else "💾 Save Preferences"
     keyboard.append([
@@ -145,6 +149,64 @@ def format_preference_message(selected_preferences: List[str], active_sector: st
     )
 
 
+async def send_latest_jobs_to_user(update: Update, user_id: int) -> None:
+    """Fetch recent matches for a user and present a Telegraph Instant View bulletin."""
+    user_prefs = get_user_preferences(user_id)
+    if not user_prefs:
+        msg = (
+            "🎯 *No Preferences Configured*\n\n"
+            "Please select target categories first using /preferences so we can match vacancies for you."
+        )
+        if update.callback_query:
+            await update.callback_query.message.reply_text(msg, parse_mode="Markdown")
+        elif update.message:
+            await update.message.reply_text(msg, parse_mode="Markdown")
+        return
+
+    matches = get_matched_jobs_for_user(user_prefs, limit=40)
+    if not matches:
+        prefs_str = ", ".join(f"*{p}*" for p in user_prefs)
+        msg = (
+            "✨ *No Current Matches Found*\n\n"
+            f"No recent postings match your selected categories ({prefs_str}).\n"
+            "We scrape monitored channels 3 times daily. You will be alerted as soon as new roles arrive!"
+        )
+        if update.callback_query:
+            await update.callback_query.message.reply_text(msg, parse_mode="Markdown")
+        elif update.message:
+            await update.message.reply_text(msg, parse_mode="Markdown")
+        return
+
+    matched_dict = match_jobs_with_preferences(matches, user_prefs)
+    telegraph_url = create_job_update_telegraph_page(matched_dict)
+
+    text = (
+        f"✨ *Latest Career Fit Matches*\n\n"
+        f"Found *{len(matches)}* active vacancies matching your categories:\n"
+    )
+    for cat, jobs in matched_dict.items():
+        text += f"• *{cat}*: {len(jobs)} role(s)\n"
+
+    text += "\n⚡ *Tap Instant View below to view the full curated bulletin:*"
+
+    buttons = []
+    if telegraph_url:
+        buttons.append([InlineKeyboardButton("⚡ Open Instant View", url=telegraph_url)])
+
+    app_url = get_web_app_url()
+    row = []
+    if app_url:
+        row.append(InlineKeyboardButton("📱 Browse in App", web_app=WebAppInfo(url=app_url)))
+    row.append(InlineKeyboardButton("⚙️ Edit Preferences", callback_data="sec_tech"))
+    buttons.append(row)
+
+    markup = InlineKeyboardMarkup(buttons)
+    if update.callback_query:
+        await update.callback_query.message.reply_text(text, reply_markup=markup, parse_mode="Markdown")
+    elif update.message:
+        await update.message.reply_text(text, reply_markup=markup, parse_mode="Markdown")
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /start command: register user and present sleek preference menu."""
     user = update.effective_user
@@ -165,6 +227,14 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         parse_mode="Markdown",
         disable_web_page_preview=True,
     )
+
+
+async def jobs_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /jobs command: generate Instant View bulletin of recent matches on demand."""
+    user = update.effective_user
+    if not user:
+        return
+    await send_latest_jobs_to_user(update, user.id)
 
 
 async def preferences_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -190,13 +260,14 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     help_text = (
         "✨ *Career Fit Jobs Bot*\n\n"
         "🔍 *Available Commands:*\n"
-        "• /start — Welcome screen and career preferences\n"
+        "• /start — Welcome dashboard & preferences\n"
+        "• /jobs — Fetch latest matching job bulletin with Instant View\n"
         "• /preferences — Update your target job categories\n"
-        "• /help — Show this help message\n\n"
+        "• /help — Show this guide\n\n"
         "📬 *Delivery Schedule:*\n"
-        "Alerts run 3 times daily (morning, afternoon, and evening UTC) whenever new matching vacancies appear.\n\n"
+        "Automatic alerts arrive 3 times daily (05:00, 11:00, 17:00 UTC) with Telegram Instant View.\n\n"
         "💡 *Tips:*\n"
-        "Select up to 15 categories across any sector to tailor your alerts."
+        "Use /jobs anytime if you want to see the latest vacancies on demand."
     )
     if update.message:
         await update.message.reply_text(help_text, parse_mode="Markdown")
@@ -214,6 +285,11 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     user_id = query.from_user.id
     data = query.data or ""
 
+    # On-demand jobs button
+    if data == "action_get_jobs":
+        await send_latest_jobs_to_user(update, user_id)
+        return
+
     # 1. Save preferences
     if data == "pref_submit":
         user_prefs = get_user_preferences(user_id)
@@ -225,7 +301,8 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await query.edit_message_text(
             f"✅ *Preferences Saved!*\n\n"
             f"You will receive alerts for:\n{summary}\n\n"
-            "Whenever top channels post matching vacancies, you will be notified.",
+            "Whenever top channels post matching vacancies, you will be notified.\n"
+            "You can also run /jobs anytime to view current matches!",
             parse_mode="Markdown",
         )
         return
@@ -254,7 +331,6 @@ async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     # 4. Toggle Category Chip
     if data.startswith("pref_"):
         parts = data.split("_")
-        # Format: pref_<slug>_<active_sector>
         active_sector = parts[-1] if parts[-1] in SECTORS else "tech"
         slug = "_".join(parts[1:-1]) if parts[-1] in SECTORS else "_".join(parts[1:])
 
@@ -300,7 +376,7 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             await update.effective_message.reply_text(
                 f"✅ *Preferences updated via Mini App!*\n\n"
                 f"Selected categories:\n{summary}\n\n"
-                "You are all set to receive tailored alerts.",
+                "Use /jobs to fetch current matching vacancies anytime!",
                 parse_mode="Markdown",
             )
     except Exception as e:
@@ -310,6 +386,7 @@ async def web_app_data_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 def register_handlers(application: Application) -> None:
     """Register all bot command, callback, and Mini App handlers on the application."""
     application.add_handler(CommandHandler("start", start_command))
+    application.add_handler(CommandHandler("jobs", jobs_command))
     application.add_handler(CommandHandler("preferences", preferences_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CallbackQueryHandler(button_callback))

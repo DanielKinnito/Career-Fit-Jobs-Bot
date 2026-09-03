@@ -12,11 +12,24 @@ def test_health_check():
 
 
 def test_mini_app_served():
+    """The Mini App serves HTML with the expected tab structure."""
     client = TestClient(app)
     response = client.get("/app")
     assert response.status_code == 200
-    assert "Career Fit Preferences" in response.text
-    assert "sector-group" in response.text
+    assert "<title>Career Fit</title>" in response.text
+    assert "tab-jobs" in response.text
+    assert "tab-preferences" in response.text
+    assert "tab-profile" in response.text
+
+
+def test_jobs_api_returns_list():
+    """GET /api/jobs returns a JSON response with a jobs list."""
+    client = TestClient(app)
+    response = client.get("/api/jobs")
+    assert response.status_code == 200
+    data = response.json()
+    assert "jobs" in data
+    assert isinstance(data["jobs"], list)
 
 
 def test_webhook_secret_rejection(monkeypatch):

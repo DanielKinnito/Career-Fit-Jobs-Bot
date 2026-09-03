@@ -26,8 +26,13 @@ def test_format_summary_message():
         ],
     }
     summary = format_summary_message(matched)
-    assert "Latest Job Matches" in summary
-    assert "Developer: 2 job(s)" in summary
+    assert "Career Fit Jobs Bulletin" in summary
+    assert "Developer" in summary
     assert "@Maroset" in summary
     assert "@freelance_ethio" in summary
-    assert "Design: 1 job(s)" in summary
+    assert "Design" in summary
+
+
+def test_format_summary_message_empty():
+    summary = format_summary_message({})
+    assert "No new vacancies matched" in summary
