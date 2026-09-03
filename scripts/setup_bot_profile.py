@@ -32,6 +32,9 @@ async def configure_bot():
     commands = [
         BotCommand("start", "Launch Career Fit dashboard & preferences"),
         BotCommand("jobs", "View latest matched job bulletin with Instant View"),
+        BotCommand("profile", "View your profile, CV status & experience"),
+        BotCommand("skills", "Update your skills (e.g. /skills Python, React)"),
+        BotCommand("experience", "Update your experience (e.g. /experience 3 yrs...)"),
         BotCommand("preferences", "Update your target career sectors & categories"),
         BotCommand("help", "About Career Fit matching and alert schedules"),
     ]

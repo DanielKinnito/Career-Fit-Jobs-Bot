@@ -14,6 +14,7 @@ def add_job_listing(
     message_link: str,
     summary: str,
     raw_text: str = "",
+    work_type: str = "Unspecified",
 ) -> bool:
     """Insert a new scraped job listing into Supabase."""
     try:
@@ -25,12 +26,21 @@ def add_job_listing(
             "message_link": message_link,
             "summary": summary,
             "raw_text": raw_text,
+            "work_type": work_type,
             "scraped_at": now_iso,
         }
-        response = supabase.table("job_listings").insert(payload).execute()
-        if response.data:
-            logger.debug(f"Inserted job {channel}:{message_id}")
-            return True
+        try:
+            response = supabase.table("job_listings").insert(payload).execute()
+            if response.data:
+                logger.debug(f"Inserted job {channel}:{message_id} ({work_type})")
+                return True
+        except Exception:
+            # Fallback if work_type column is not yet migrated in Supabase
+            payload.pop("work_type", None)
+            response = supabase.table("job_listings").insert(payload).execute()
+            if response.data:
+                logger.debug(f"Inserted job {channel}:{message_id}")
+                return True
         return False
     except Exception as e:
         logger.error(f"Error adding job listing ({channel}:{message_id}): {e}")

@@ -16,6 +16,7 @@ from src.config import (
 )
 from src.db.jobs import add_job_listing
 from src.db.scraper_state import get_channel_watermark, update_channel_watermark
+from src.scraper.classifier import is_certified_job_post, extract_work_type
 
 logging.basicConfig(
     level=logging.INFO,
@@ -77,11 +78,12 @@ async def scrape_channel(
             if not raw_text.strip():
                 continue
 
-            if not is_job_related(raw_text, keywords):
+            if not is_certified_job_post(raw_text):
                 continue
 
             summary = raw_text[:300].strip()
             message_link = f"https://t.me/{channel_clean}/{message.id}"
+            work_type = extract_work_type(raw_text)
 
             success = add_job_listing(
                 channel=channel,
@@ -89,6 +91,7 @@ async def scrape_channel(
                 message_link=message_link,
                 summary=summary,
                 raw_text=raw_text,
+                work_type=work_type,
             )
             if success:
                 new_count += 1

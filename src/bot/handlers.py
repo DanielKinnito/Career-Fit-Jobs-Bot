@@ -15,6 +15,13 @@ from telegram.ext import (
 from src.config import JOB_CATEGORIES, WEBHOOK_URL
 from src.db.users import get_or_create_user, update_user_preferences, get_user_preferences
 from src.db.jobs import get_matched_jobs_for_user
+from src.db.profiles import (
+    get_user_profile,
+    upsert_user_profile,
+    upload_user_cv,
+    get_user_cv_signed_url,
+    validate_cv_file,
+)
 from src.notifier.runner import match_jobs_with_preferences
 from src.bot.formatters import create_job_update_telegraph_page
 from src.policy import get_privacy_policy_url
@@ -262,15 +269,168 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "🔍 *Available Commands:*\n"
         "• /start — Welcome dashboard & preferences\n"
         "• /jobs — Fetch latest matching job bulletin with Instant View\n"
+        "• /profile — View and manage your CV, skills & experience\n"
+        "• /skills <text> — Update your professional skills\n"
+        "• /experience <text> — Update your work experience\n"
         "• /preferences — Update your target job categories\n"
         "• /help — Show this guide\n\n"
+        "📄 *CV Upload:*\n"
+        "Send a PDF or Word document (.docx/.doc) directly to this chat to link your CV.\n\n"
         "📬 *Delivery Schedule:*\n"
-        "Automatic alerts arrive 3 times daily (05:00, 11:00, 17:00 UTC) with Telegram Instant View.\n\n"
-        "💡 *Tips:*\n"
-        "Use /jobs anytime if you want to see the latest vacancies on demand."
+        "Automatic alerts arrive 3 times daily (05:00, 11:00, 17:00 UTC) with Telegram Instant View."
     )
     if update.message:
         await update.message.reply_text(help_text, parse_mode="Markdown")
+
+
+async def profile_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Display user profile with CV status, skills, experience, and actions."""
+    user = update.effective_user
+    if not user:
+        return
+
+    profile = get_user_profile(user.id) or {}
+    prefs = get_user_preferences(user.id)
+
+    cv_filename = profile.get("cv_original_filename")
+    cv_status = f"📄 `{cv_filename}` (Active)" if cv_filename else "❌ _No CV uploaded yet_"
+    skills = profile.get("skills") or "_Not set yet (use /skills to set)_"
+    experience = profile.get("experience") or "_Not set yet (use /experience to set)_"
+    pref_count = len(prefs)
+
+    text = (
+        "👤 *Career Fit Profile*\n\n"
+        f"• *User:* {user.first_name} (ID: `{user.id}`)\n"
+        f"• *CV Attached:* {cv_status}\n"
+        f"• *Skills:* {skills}\n"
+        f"• *Experience:* {experience}\n"
+        f"• *Target Categories:* {pref_count} active\n\n"
+        "💡 *Actions:*\n"
+        "• Send a PDF or DOCX file to this chat anytime to attach or swap your CV.\n"
+        "• Use `/skills <your skills>` to update skills.\n"
+        "• Use `/experience <your experience>` to update experience."
+    )
+
+    buttons = []
+    cv_path = profile.get("cv_storage_path")
+    if cv_path:
+        signed_url = get_user_cv_signed_url(cv_path)
+        if signed_url:
+            buttons.append([InlineKeyboardButton("📄 View / Download Attached CV", url=signed_url)])
+
+    row = []
+    app_url = get_web_app_url()
+    if app_url:
+        row.append(InlineKeyboardButton("📱 Open in App", web_app=WebAppInfo(url=app_url)))
+    row.append(InlineKeyboardButton("🎯 Edit Preferences", callback_data="sec_tech"))
+    buttons.append(row)
+
+    if update.callback_query:
+        await update.callback_query.message.reply_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+            parse_mode="Markdown",
+        )
+    elif update.message:
+        await update.message.reply_text(
+            text=text,
+            reply_markup=InlineKeyboardMarkup(buttons),
+            parse_mode="Markdown",
+        )
+
+
+async def skills_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /skills command: update user skills text."""
+    user = update.effective_user
+    if not user:
+        return
+
+    if not context.args:
+        await update.message.reply_text(
+            "💡 *Usage:* `/skills <your skills>`\n\n"
+            "Example: `/skills Python, FastAPI, React, PostgreSQL, Docker`",
+            parse_mode="Markdown",
+        )
+        return
+
+    skills_text = " ".join(context.args).strip()
+    success = upsert_user_profile(user.id, skills=skills_text)
+    if success:
+        await update.message.reply_text(
+            f"✅ *Skills Updated!*\n\n• *Your Skills:* {skills_text}\n\nUse /profile to view your complete profile.",
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text("❌ Failed to update skills. Please try again.")
+
+
+async def experience_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /experience command: update user experience text."""
+    user = update.effective_user
+    if not user:
+        return
+
+    if not context.args:
+        await update.message.reply_text(
+            "💡 *Usage:* `/experience <summary>`\n\n"
+            "Example: `/experience 4+ years as Senior Software Engineer specializing in backend systems`",
+            parse_mode="Markdown",
+        )
+        return
+
+    experience_text = " ".join(context.args).strip()
+    success = upsert_user_profile(user.id, experience=experience_text)
+    if success:
+        await update.message.reply_text(
+            f"✅ *Experience Updated!*\n\n• *Experience:* {experience_text}\n\nUse /profile to view your complete profile.",
+            parse_mode="Markdown",
+        )
+    else:
+        await update.message.reply_text("❌ Failed to update experience. Please try again.")
+
+
+async def document_upload_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle document uploads (CV / Resume)."""
+    message = update.effective_message
+    user = update.effective_user
+    if not message or not message.document or not user:
+        return
+
+    doc = message.document
+    filename = doc.file_name or "resume.pdf"
+    file_size = doc.file_size or 0
+
+    is_valid, err = validate_cv_file(filename, file_size)
+    if not is_valid:
+        await message.reply_text(f"❌ *Upload Rejected*\n\n{err}", parse_mode="Markdown")
+        return
+
+    status_msg = await message.reply_text("⏳ *Uploading CV to secure cloud storage...*", parse_mode="Markdown")
+
+    try:
+        telegram_file = await doc.get_file()
+        file_bytes = await telegram_file.download_as_bytearray()
+
+        storage_path = upload_user_cv(
+            telegram_id=user.id,
+            filename=filename,
+            file_bytes=bytes(file_bytes),
+        )
+
+        if storage_path:
+            await status_msg.edit_text(
+                f"✅ *CV Attached Successfully!*\n\n"
+                f"• *File:* `{filename}`\n"
+                f"• *Status:* Active default CV\n"
+                f"• *Storage:* Encrypted in Supabase Storage\n\n"
+                "Your profile is now complete. Send a new document anytime to swap your CV.",
+                parse_mode="Markdown",
+            )
+        else:
+            await status_msg.edit_text("❌ Failed to store CV. Please try again later.")
+    except Exception as e:
+        logger.error(f"Error handling document upload: {e}")
+        await status_msg.edit_text("❌ Error processing file upload. Please try again.")
 
 
 async def button_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -387,7 +547,11 @@ def register_handlers(application: Application) -> None:
     """Register all bot command, callback, and Mini App handlers on the application."""
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(CommandHandler("jobs", jobs_command))
+    application.add_handler(CommandHandler("profile", profile_command))
+    application.add_handler(CommandHandler("skills", skills_command))
+    application.add_handler(CommandHandler("experience", experience_command))
     application.add_handler(CommandHandler("preferences", preferences_command))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CallbackQueryHandler(button_callback))
+    application.add_handler(MessageHandler(filters.Document.ALL, document_upload_handler))
     application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data_handler))

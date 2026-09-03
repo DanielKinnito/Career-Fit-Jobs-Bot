@@ -78,10 +78,18 @@ def create_job_update_telegraph_page(matched_jobs: Dict[str, List[Dict[str, Any]
                 channel = job.get("channel", "Telegram Channel")
                 link = job.get("message_link", "#")
 
+                work_type = job.get("work_type")
+                if not work_type or work_type == "Unspecified":
+                    full_text = raw_summary + " " + (job.get("raw_text") or "")
+                    from src.scraper.classifier import extract_work_type
+                    work_type = extract_work_type(full_text)
+
+                modality_badge = f" • <em>{work_type}</em>" if work_type and work_type != "Unspecified" else ""
+
                 content += f"""
                 <blockquote>
                 <strong>{title}</strong><br>
-                <small>Source: {channel}</small>
+                <small>Source: {channel}{modality_badge}</small>
                 {f'<p>{body}</p>' if body else ''}
                 <p><a href="{link}">👉 Apply / Open Telegram Post</a></p>
                 </blockquote>

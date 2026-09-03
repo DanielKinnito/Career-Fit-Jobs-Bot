@@ -32,6 +32,16 @@ def test_jobs_api_returns_list():
     assert isinstance(data["jobs"], list)
 
 
+def test_profile_api():
+    """GET /api/profile returns profile structure."""
+    client = TestClient(app)
+    response = client.get("/api/profile?telegram_id=12345678")
+    assert response.status_code == 200
+    data = response.json()
+    assert "profile" in data
+    assert "preferences" in data
+
+
 def test_webhook_secret_rejection(monkeypatch):
     monkeypatch.setattr("api.webhook.WEBHOOK_SECRET", "super_secret_token_123")
     client = TestClient(app)

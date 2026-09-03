@@ -640,7 +640,23 @@
         </div>
       </div>
       <div class="stat-row">
-        <span class="stat-label">Active Career Targets</span>
+        <span class="stat-label">Attached CV</span>
+        <span class="stat-value" id="profile-cv-status">None uploaded</span>
+      </div>
+      <div class="stat-row" id="profile-cv-link-row" style="display: none;">
+        <span class="stat-label">Document Link</span>
+        <span class="stat-value"><a id="profile-cv-url" href="#" target="_blank" style="color: var(--accent-blue); text-decoration: none; font-weight: 600;">Download CV ↗</a></span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Skills</span>
+        <span class="stat-value" id="profile-skills" style="max-width: 55%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Not set yet</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Experience</span>
+        <span class="stat-value" id="profile-experience" style="max-width: 55%; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">Not set yet</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-label">Active Categories</span>
         <span class="stat-value" id="profile-pref-count">0 categories</span>
       </div>
       <div class="stat-row">
@@ -654,9 +670,9 @@
     </div>
 
     <div class="preview-box">
-      <div class="preview-title">📄 CV Upload & Application Tracking</div>
+      <div class="preview-title">📄 CV Swap & Quick Commands</div>
       <div class="preview-desc">
-        Store your CV securely in cloud storage and track job submissions automatically by sending links. Coming in the upcoming release.
+        Send any PDF or Word document (.docx/.doc) directly to the bot in chat to attach or swap your CV. Use <code>/skills</code> and <code>/experience</code> to update your profile anytime.
       </div>
     </div>
   </div>
@@ -871,10 +887,29 @@
         const title = lines[0] ? lines[0].replace(/[*_#]/g, '').trim() : 'Job Vacancy';
         const body = lines.slice(1).join('\n').replace(/[*_#]/g, '').trim();
 
+        let workType = job.work_type;
+        if (!workType || workType === 'Unspecified') {
+          const fullText = ((job.summary || '') + ' ' + (job.raw_text || '')).toLowerCase();
+          if (fullText.includes('remote') || fullText.includes('work from home') || fullText.includes('wfh')) {
+            workType = 'Remote';
+          } else if (fullText.includes('hybrid')) {
+            workType = 'Hybrid';
+          } else if (fullText.includes('on-site') || fullText.includes('onsite') || fullText.includes('addis ababa')) {
+            workType = 'On-site';
+          } else {
+            workType = '';
+          }
+        }
+
+        const modalityBadge = workType ? `<span class="job-source-tag" style="background: rgba(48, 209, 88, 0.15); color: #30d158; border: 1px solid rgba(48, 209, 88, 0.25);">🌐 ${workType}</span>` : '';
+
         card.innerHTML = `
           <div class="job-header">
             <div class="job-title">${title}</div>
-            <div class="job-source-tag">${job.channel || 'Telegram'}</div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              ${modalityBadge}
+              <div class="job-source-tag">${job.channel || 'Telegram'}</div>
+            </div>
           </div>
           <div class="job-summary" id="sum-${job.id}">${body || title}</div>
           <div class="job-footer">
@@ -1041,6 +1076,31 @@
               selectedCategories = new Set(data.preferences);
               updateCounter();
               renderCategoryChips();
+            }
+          }
+        } catch (e) {}
+
+        try {
+          const profRes = await fetch(`/api/profile?telegram_id=${telegramId}`);
+          if (profRes.ok) {
+            const pData = await profRes.json();
+            const prof = pData.profile || {};
+            if (prof.cv_original_filename) {
+              document.getElementById('profile-cv-status').innerHTML = `<span style="color: var(--accent-green); font-weight: 600;">📄 ${prof.cv_original_filename}</span>`;
+              if (pData.cv_download_url) {
+                document.getElementById('profile-cv-link-row').style.display = 'flex';
+                document.getElementById('profile-cv-url').href = pData.cv_download_url;
+              }
+            } else {
+              document.getElementById('profile-cv-status').innerText = 'None uploaded';
+            }
+            if (prof.skills) {
+              document.getElementById('profile-skills').innerText = prof.skills;
+              document.getElementById('profile-skills').title = prof.skills;
+            }
+            if (prof.experience) {
+              document.getElementById('profile-experience').innerText = prof.experience;
+              document.getElementById('profile-experience').title = prof.experience;
             }
           }
         } catch (e) {}

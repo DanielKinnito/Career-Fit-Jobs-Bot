@@ -19,6 +19,7 @@ from src.config import TELEGRAM_BOT_TOKEN, WEBHOOK_SECRET
 from src.bot.handlers import register_handlers
 from src.db.users import get_user_preferences, update_user_preferences, get_or_create_user
 from src.db.jobs import get_matched_jobs_for_user, get_recent_job_listings
+from src.db.profiles import get_user_profile, upsert_user_profile, get_user_cv_signed_url
 
 logging.basicConfig(
     level=logging.INFO,
@@ -108,6 +109,38 @@ async def save_preferences(payload: PreferencesPayload):
     """Save preferences submitted from the Mini App."""
     get_or_create_user(payload.telegram_id)
     success = update_user_preferences(payload.telegram_id, payload.preferences)
+    return {"ok": success}
+
+
+class ProfileUpdatePayload(BaseModel):
+    telegram_id: int
+    skills: Optional[str] = None
+    experience: Optional[str] = None
+
+
+@app.get("/api/profile")
+async def get_profile(telegram_id: int):
+    """Retrieve full profile details for a user."""
+    profile = get_user_profile(telegram_id) or {}
+    prefs = get_user_preferences(telegram_id)
+    cv_download_url = None
+    if profile.get("cv_storage_path"):
+        cv_download_url = get_user_cv_signed_url(profile["cv_storage_path"])
+    return {
+        "profile": profile,
+        "preferences": prefs,
+        "cv_download_url": cv_download_url,
+    }
+
+
+@app.post("/api/profile")
+async def update_profile(payload: ProfileUpdatePayload):
+    """Update profile skills and experience from the Mini App."""
+    success = upsert_user_profile(
+        telegram_id=payload.telegram_id,
+        skills=payload.skills,
+        experience=payload.experience,
+    )
     return {"ok": success}
 
 
