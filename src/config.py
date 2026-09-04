@@ -44,8 +44,7 @@ CHANNELS: List[str] = [
     "@shegarjob",
     "@vacancyforallethio",
     "@fanajobs",
-    "@DagmawiBabiJobs",
-    "@chapidevtalks",   
+    "@DagmawiBabiJobs",   
 ]
 
 # Supported job categories
