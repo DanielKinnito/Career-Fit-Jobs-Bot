@@ -14,7 +14,7 @@ from src.config import (
     TELETHON_SESSION_STRING,
     CHANNELS,
 )
-from src.db.jobs import add_job_listing
+from src.db.jobs import add_job_listing, cleanup_expired_job_listings
 from src.db.scraper_state import get_channel_watermark, update_channel_watermark
 from src.scraper.classifier import is_certified_job_post, extract_work_type
 
@@ -127,6 +127,14 @@ async def run() -> int:
             total_scraped += count
             # Polite delay between channel requests to avoid Telegram flood limits
             await asyncio.sleep(1)
+
+        # Prune expired job listings daily to keep storage minimal on free tier
+        try:
+            cleaned = cleanup_expired_job_listings()
+            logger.info(f"Database retention: cleaned {cleaned} expired job listing(s)")
+        except Exception as e:
+            logger.warning(f"Database retention cleanup skipped: {e}")
+
         logger.info(f"Scraping complete. Total new listings added: {total_scraped}")
         return total_scraped
     finally:

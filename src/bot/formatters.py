@@ -89,7 +89,7 @@ def create_job_update_telegraph_page(matched_jobs: Dict[str, List[Dict[str, Any]
                 content += f"""
                 <blockquote>
                 <strong>{title}</strong><br>
-                <small>Source: {channel}{modality_badge}</small>
+                <em>Source: {channel}{modality_badge}</em>
                 {f'<p>{body}</p>' if body else ''}
                 <p><a href="{link}">👉 Apply / Open Telegram Post</a></p>
                 </blockquote>
@@ -98,7 +98,7 @@ def create_job_update_telegraph_page(matched_jobs: Dict[str, List[Dict[str, Any]
 
         content += """
         <hr>
-        <p><small>Delivered by <strong>Career Fit Jobs Bot</strong>. Manage your career alerts in the bot anytime.</small></p>
+        <p><em>Delivered by <strong>Career Fit Jobs Bot</strong>. Manage your career alerts in the bot anytime.</em></p>
         """
 
         response = telegraph.create_page(

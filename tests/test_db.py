@@ -59,3 +59,24 @@ def test_update_channel_watermark(monkeypatch):
     success = update_channel_watermark("@Maroset", 500)
     assert success is True
     mock_table.upsert.assert_called_once()
+
+
+def test_cleanup_expired_job_listings(monkeypatch):
+    mock_supabase = MagicMock()
+    mock_table = MagicMock()
+    mock_supabase.table.return_value = mock_table
+    mock_delete = MagicMock()
+    mock_table.delete.return_value = mock_delete
+    mock_lt = MagicMock()
+    mock_delete.lt.return_value = mock_lt
+
+    mock_response = MagicMock()
+    mock_response.data = [{"id": 1}, {"id": 2}, {"id": 3}]
+    mock_lt.execute.return_value = mock_response
+
+    monkeypatch.setattr("src.db.jobs.get_supabase_client", lambda: mock_supabase)
+
+    from src.db.jobs import cleanup_expired_job_listings
+    deleted = cleanup_expired_job_listings(retention_days=14)
+    assert deleted == 3
+    mock_delete.lt.assert_called_once()

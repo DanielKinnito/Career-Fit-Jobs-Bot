@@ -22,7 +22,7 @@ from src.db.profiles import (
     get_user_cv_signed_url,
     validate_cv_file,
 )
-from src.notifier.runner import match_jobs_with_preferences
+from src.matching.matcher import match_jobs_with_preferences
 from src.bot.formatters import create_job_update_telegraph_page
 from src.policy import get_privacy_policy_url
 

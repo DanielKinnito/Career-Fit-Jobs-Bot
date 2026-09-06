@@ -13,6 +13,7 @@ from .jobs import (
     get_all_job_listings,
     get_recent_job_listings,
     get_matched_jobs_for_user,
+    cleanup_expired_job_listings,
     clear_job_listings,
 )
 from .scraper_state import (
@@ -37,6 +38,7 @@ __all__ = [
     "get_all_job_listings",
     "get_recent_job_listings",
     "get_matched_jobs_for_user",
+    "cleanup_expired_job_listings",
     "clear_job_listings",
     "get_channel_watermark",
     "update_channel_watermark",

@@ -29,6 +29,9 @@ SUPABASE_DB_URL: str = os.getenv("SUPABASE_DB_URL", "")
 WEBHOOK_URL: str = os.getenv("WEBHOOK_URL", "")
 WEBHOOK_SECRET: str = os.getenv("WEBHOOK_SECRET", "")
 
+# Job database retention configuration
+JOB_RETENTION_DAYS: int = int(os.getenv("JOB_RETENTION_DAYS", "14"))
+
 # Monitored Telegram channels
 CHANNELS: List[str] = [
     "@Maroset",

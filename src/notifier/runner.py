@@ -20,27 +20,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("notifier")
 
+from src.matching.matcher import match_jobs_with_preferences
+
 NOTIFIER_WATERMARK_KEY = "__notifier_watermark__"
-
-
-def match_jobs_with_preferences(
-    jobs: List[Dict[str, Any]], preferences: List[str]
-) -> Dict[str, List[Dict[str, Any]]]:
-    """Match job listings against a list of category preferences (case-insensitive substring)."""
-    matches: Dict[str, List[Dict[str, Any]]] = {}
-    if not preferences:
-        return matches
-
-    for job in jobs:
-        content = (job.get("summary", "") + " " + (job.get("raw_text") or "")).lower()
-        for pref in preferences:
-            pref_clean = pref.strip()
-            if pref_clean.lower() in content:
-                if pref_clean not in matches:
-                    matches[pref_clean] = []
-                matches[pref_clean].append(job)
-
-    return matches
 
 
 async def send_updates_to_user(
